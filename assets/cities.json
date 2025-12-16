@@ -21,5 +21,8 @@
   {"name": "Los Angeles Airport", "lat": 33.942791, "lon": -118.410042},
   {"name": "Ulanbatar Airport", "lat": 47.64690, "lon": 106.81980},
   {"name": "Julius Nyerere Airport", "lat": -6.8720, "lon": 39.2012},
-  {"name": "Astana Airport", "lat": 51.0271, "lon": 71.4607}
+  {"name": "Astana Airport", "lat": 51.0271, "lon": 71.4607},
+  {"name": "Fairbanks", "lat": 64.815355, "lon": -147.8566},
+  {"name": "Mexico City", "lat": 19.4364, "lon": -99.072},
+  {"name": "Tromso Airport", "lat": 69.6834, "lon": 18.9168}
 ]
