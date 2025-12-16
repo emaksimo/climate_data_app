@@ -1,0 +1,13 @@
+[
+  {"name": "London",  "lat": 51.507,  "lon": -0.127 },
+  {"name": "Paris", "lat": 48.856, "lon": 2.352 },
+  {"name": "Kchabta (Bizerte) wind", "lat": 37.085, "lon": 9.866 },
+  {"name": "Tataouine PV", "lat": 32.929, "lon": 10.451 },
+  {"name": "Tozeur PV",  "lat": 33.920, "lon": 8.133 },
+  {"name": "Kairouan PV",  "lat": 35.676, "lon": 10.101 },
+  {"name": "Gabes PV",  "lat": 33.881, "lon": 10.098 },
+  {"name": "Sidi Bouzid PV", "lat": 35.040, "lon": 9.484 },
+  {"name" : "New York", "lat": 40.712, "lon": -74.006},
+  {"name": "Moruya Airport",  "lat": -35.902, "lon": 150.147 },
+  {"name": "Marqua Airport", "lat": -22.816, "lon": 137.35}
+]

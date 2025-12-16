@@ -1,11 +1,13 @@
-# Early warning DEMO tool 
+# climate data explorer DEMO tool 
 
 To run this project:
 
-python -m http.server 8000
+python -m http.server 8800
 
 Then open in your browser:
 http://localhost:8000/ 
 
 
-![Early warning demo app](icons/screenshot.png)
+python make_single_file.py
+
+![climate explorer demo app](icons/screenshot.png)

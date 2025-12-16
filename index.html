@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Early warning and Emergency planner</title>
+  <title>Climate Data Explorer</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -19,103 +19,98 @@
 <body>
   <div class="app">
     <div class="top-bar">
-      <div class="title">Early warning and Emergency planner</div>
+      <div class="title">Climate data explorer</div>
     </div>
 
     <div class="tabs">
-      <button class="tab-button active" data-target="tab-ch">Switzerland</button>
-      <button class="tab-button" data-target="tab-uae">UAE</button>
+      <button class="tab-button active" data-target="tab-upload">Upload</button>
+      <button class="tab-button" data-target="tab-ch">Preview</button>
+      <button class="tab-button" data-target="tab-uae">Download</button>
       <button class="tab-button" data-target="tab-3">Project Timeline</button>
     </div>
 
-    <!-- Switzerland tab -->
-    <section id="tab-ch" class="tab-content active">
+    <section id="tab-upload" class="tab-content active">
       <div class="layout">
         <div class="map-container">
-          <div id="map-ch"></div>
+          <div id="map-upload"></div>
+        </div>
+
+        <aside class="info-panel">
+          <div>
+            <div class="panel-title">Upload locations</div>
+            <div class="subtle">
+              Upload a CSV/XLS file with lat-lon geo coordinates
+            </div>
+          </div>
+        <button id="btnUploadLocations" type="button">Upload locations</button>
+        <div id="uploadModal" class="modal" aria-hidden="true">
+          <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle">
+            <div class="modal__header">
+              <h2 id="uploadModalTitle">Upload locations</h2>
+              <button id="btnCloseUploadModal" class="modal__close" type="button" aria-label="Close">×</button>
+            </div>
+
+            <div id="dropZone" class="dropzone" tabindex="0">
+              <p class="dropzone__title">Select the file from your computer or drag & drop the file</p>
+
+              <div class="dropzone__actions">
+                <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" hidden />
+                <button id="btnPickFile" type="button">Choose file</button>
+              </div>
+
+              <p id="fileName" class="dropzone__filename"></p>
+            </div>
+
+            <div class="modal__footer">
+              <button id="btnCancelUploadModal" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Switzerland tab -->
+    <section id="tab-ch" class="tab-content">
+      <div class="layout">
+        <div class="map-container">
+          <div class="chart-container">
+            <canvas id="previewChart"></canvas>
+            <div id="heatmap" class="heatmap" style="display:none;"></div>
+          </div>
         </div>
         <aside class="info-panel">
           <div>
-            <div class="panel-title">Switzerland – Municipalities</div>
+            <div class="panel-title">Select Indicators for the Preview</div>
           </div>
 
           <div class="municipality-buttons">
-            <button class="municipality-button" data-country="ch" data-id="zurich">Zürich</button>
-            <button class="municipality-button" data-country="ch" data-id="geneva">Genève</button>
+            <button class="municipality-button" data-country="ch" data-id="risk_scores">Risk scores for 11 hazards</button>
+            <button class="municipality-button" data-country="ch" data-id="flood_depth">Flood depth (90-meter)</button>
+            <button class="municipality-button" data-country="ch" data-id="tmax">Tmax</button>
+            <button class="municipality-button" data-country="ch" data-id="tmin">Tmin</button>
+            <button class="municipality-button" data-country="ch" data-id="max_ws">Max wind speed</button>
+            <button class="municipality-button" data-country="ch" data-id="tot_rain">Total rainfall</button>
+            <button class="municipality-button" data-country="ch" data-id="drought">Drought index</button>
+            <button class="municipality-button" data-country="ch" data-id="wfi">WildFire index</button>
+            <button class="municipality-button" data-country="ch" data-id="ext_rain">Extreme rainfall</button>
+            <button class="municipality-button" data-country="ch" data-id="hdd">Heating Degree Days</button>
+            <button class="municipality-button" data-country="ch" data-id="cdd">Cooling Degree Days</button>
           </div>
 
-          <!-- Municipality info -->
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-row">
-                <span class="label">Municipality:</span>
-                <span class="value" id="ch-name">–</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Square area:</span>
-                <span class="value" id="ch-area">–</span>
-                <span class="value">km²</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Population:</span>
-                <span class="value" id="ch-population">–</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Schools:</span>
-                <span class="value" id="ch-schools">–</span>
-              </div>
-            </div>
+          <div>
+            <div class="panel-title">Select scenarios</div>
           </div>
 
-          <!-- Forecast block -->
-          <div class="spacer"></div>
-
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-header">
-                <div class="forecast-title">Forecast</div>
-                <div class="forecast-datetime" id="forecast-datetime-ch"></div>
-              </div>
-              <div class="forecast-row">
-                <span class="label">+6h:</span>
-                <span class="value">60 mm cumulative rainfall</span>
-                <span class="danger-tag danger-4">level 4 danger</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">+12h:</span>
-                <span class="value">85 mm cumulative rainfall</span>
-                <span class="danger-tag danger-5">level 5 danger</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Historical daily record:</span>
-                <span class="value">105 mm (2002)</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">24h Tmin:</span>
-                <span class="value">7 °C</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Anomaly block -->
-          <div class="spacer"></div>
-
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-title">Hydro-meteorological anomalies last week:</div>
-              <div class="forecast-row">
-                <span class="label">Rainfall:</span>
-                <span class="value">+50 mm</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">River gauge:</span>
-                <span class="value">0.68 meters (flood critical threshold 0.75 meters)</span>
-              </div>
-            </div>
+          <div class="municipality-buttons">
+            <button class="municipality-button" data-country="ch" data-id="126">ssp1 rcp2.6 (orderly)</button>
+            <button class="municipality-button" data-country="ch" data-id="245">ssp2 rcp4.5 (disorderly)</button>
+            <button class="municipality-button" data-country="ch" data-id="585">ssp5 rcp8.5 (hot-house world)</button>
           </div>
         </aside>
       </div>
     </section>
+
     <!-- UAE tab -->
     <section id="tab-uae" class="tab-content">
       <div class="layout">
@@ -124,82 +119,31 @@
         </div>
         <aside class="info-panel">
           <div>
-            <div class="panel-title">UAE – Municipalities</div>
+            <div class="panel-title">Select Indicators for the Download</div>
           </div>
 
           <div class="municipality-buttons">
-            <button class="municipality-button" data-country="uae" data-id="dubai">Dubai</button>
-            <button class="municipality-button" data-country="uae" data-id="abudhabi">Abu Dhabi</button>
+            <button class="municipality-button" data-country="uae" data-id="select_all">Select ALL</button>
+            <button class="municipality-button" data-country="uae" data-id="flood_depth">Flood depth (90-meter)</button>
+            <button class="municipality-button" data-country="uae" data-id="tmax">Tmax</button>
+            <button class="municipality-button" data-country="uae" data-id="tmin">Tmin</button>
+            <button class="municipality-button" data-country="uae" data-id="max_ws">Max wind speed</button>
+            <button class="municipality-button" data-country="uae" data-id="tot_rain">Total rainfall</button>
+            <button class="municipality-button" data-country="uae" data-id="drought">Drought index</button>
+            <button class="municipality-button" data-country="uae" data-id="wfi">WildFire index</button>
+            <button class="municipality-button" data-country="uae" data-id="ext_rain">Extreme rainfall</button>
+            <button class="municipality-button" data-country="uae" data-id="hdd">Heating Degree Days</button>
+            <button class="municipality-button" data-country="uae" data-id="cdd">Cooling Degree Days</button>
           </div>
 
-          <!-- Municipality info -->
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-row">
-                <span class="label">Municipality:</span>
-                <span class="value" id="uae-name">–</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Square area:</span>
-                <span class="value" id="uae-area">–</span>
-                <span class="value">km²</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Population:</span>
-                <span class="value" id="uae-population">–</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Schools:</span>
-                <span class="value" id="uae-schools">–</span>
-              </div>
-            </div>
+          <div>
+            <div class="panel-title">Select scenarios</div>
           </div>
 
-          <!-- Forecast block -->
-          <div class="spacer"></div>
-
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-header">
-                <div class="forecast-title">Forecast</div>
-                <div class="forecast-datetime" id="forecast-datetime-uae"></div>
-              </div>
-              <div class="forecast-row">
-                <span class="label">+6h:</span>
-                <span class="value">120 mm cumulative rainfall</span>
-                <span class="danger-tag danger-4">level 4 danger</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">+12h:</span>
-                <span class="value">208 mm cumulative rainfall</span>
-                <span class="danger-tag danger-5">level 5 danger</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">Historical record:</span>
-                <span class="value">255 mm (2024)</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">24h Tmin:</span>
-                <span class="value">17 °C</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Anomaly block -->
-          <div class="spacer"></div>
-
-          <div class="text-block">
-            <div class="text-block-inner">
-              <div class="forecast-title">Hydro-meteorological anomalies last week:</div>
-              <div class="forecast-row">
-                <span class="label">Rainfall:</span>
-                <span class="value">+23 mm</span>
-              </div>
-              <div class="forecast-row">
-                <span class="label">River gauge:</span>
-                <span class="value">0.17 meters (flood critical threshold 0.34 meters)</span>
-              </div>
-            </div>
+          <div class="municipality-buttons">
+            <button class="municipality-button" data-country="ch" data-id="126">ssp1 rcp2.6 (orderly)</button>
+            <button class="municipality-button" data-country="ch" data-id="245">ssp2 rcp4.5 (disorderly)</button>
+            <button class="municipality-button" data-country="ch" data-id="585">ssp5 rcp8.5 (hot-house world)</button>
           </div>
         </aside>
       </div>
@@ -213,17 +157,17 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <span>Project director :  Islam Ragab</span>
+      <span>Project director :  Elena Maksimovich</span>
       <span class="footer-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
           <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
       </span>
-      <a href="mailto:islam.ragab@sihub.ch">islam.ragab@sihub.ch</a>
+      <a href="mailto:contact@weathertrade.net">contact@weathertrade.net</a>
       <a
         class="linkedin-badge"
-        href="https://www.linkedin.com/in/islam-ragab-/"
+        href="https://www.linkedin.com/company/weather-trade-net/"
         target="_blank"
         rel="noopener"
         aria-label="LinkedIn profile"

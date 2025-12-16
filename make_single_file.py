@@ -21,7 +21,7 @@ index_html = re.sub(
     index_html
 )
 
-out_file = base / "early_warning_planner_standalone.html"
+out_file = base / "climate_data_explorer.html"
 out_file.write_text(index_html, encoding="utf-8")
 
 print("Created:", out_file)
