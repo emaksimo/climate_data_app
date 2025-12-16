@@ -453,7 +453,7 @@ html, body {
 .primary-button {
   align-self: flex-start;        /* ⬅️ prevents full-width stretch */
   margin-top: 0.5rem;
-
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   background-color: #0a66c2;     /* blue action color */
   color: #ffffff;
 
@@ -473,6 +473,7 @@ html, body {
 
 .primary-button:hover {
   background-color: #004182;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 .primary-button:active {

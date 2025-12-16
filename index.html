@@ -37,12 +37,28 @@
 
         <aside class="info-panel">
           <div>
-            <div class="panel-title">Upload locations</div>
+            <div class="panel-title">Step 1: Preview and double-check your locations on the map</div>
+            <div class="spacer"></div>
+            <button id="btnUploadLocations" class="primary-button" type="button">
+              Upload locations
+            </button>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
             <div class="subtle">
-              Upload a CSV/XLS file with lat-lon geo coordinates
+              <p> Upload a CSV/XLS file with lat-lon geo coordinates or with postal addresses</p>
+              <p> 3 columns: id, latitude (lat, LAT), longitude (lon, LON), or</p>
+              <p> 2 columns: id, address</p>
+              <p> ID is a short and unique</p>
+              <p> Each row represents one facility (property, factory)</p>
+              <p> Latitude and Longitude are negative in the Western and in the Southern hemisphere</p>
+              <p> Units: Degrees decimals, digital, without symbols</p>
+              <p> Precision: at least 3 digit precision (-12.345)</p>
+              <p> Separator: dot</p>
+              <p> Get template file here</p>
+              <p> Please make sure that all your locations are inland. Offshore risk assessment is available on demand. Climate risks are different inland and offshore.
+              <p> Watch our video tutorial https://youtu.be/z34bGZr-irQ </p>
             </div>
           </div>
-        <button id="btnUploadLocations" type="primary-button">Upload locations</button>
         <div id="uploadModal" class="modal" aria-hidden="true">
           <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle">
             <div class="modal__header">
@@ -97,7 +113,7 @@
             <button class="municipality-button" data-country="ch" data-id="hdd">Heating Degree Days</button>
             <button class="municipality-button" data-country="ch" data-id="cdd">Cooling Degree Days</button>
           </div>
-
+          <div class="spacer"></div>
           <div>
             <div class="panel-title">Select scenarios</div>
           </div>
@@ -135,7 +151,7 @@
             <button class="municipality-button" data-country="uae" data-id="hdd">Heating Degree Days</button>
             <button class="municipality-button" data-country="uae" data-id="cdd">Cooling Degree Days</button>
           </div>
-
+          <div class="spacer"></div>
           <div>
             <div class="panel-title">Select scenarios</div>
           </div>

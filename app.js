@@ -33,9 +33,14 @@ function setupTabs() {
       if (targetId === "tab-upload") {
         setTimeout(loadAndRenderUploadCities, 120);
       }
+
+      if (targetId === "tab-3") {
+        setTimeout(renderGantt, 50);
+      }
     });
   });
 }
+
 
 // -----------------------
 // Modal (Upload locations)
@@ -346,4 +351,143 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPreviewIndicatorButtons();
   setupDownloadGraphButton();
   renderPreviewChart("Select an indicator on the right");
+  renderGantt();
 });
+
+
+// =======================
+// Gantt definition
+// =======================
+
+const ganttTasks = [
+  {
+    name: "Historical weather data collection",
+    start: "2026-01-01",
+    end: "2026-01-15",
+  },
+  {
+    name: "Radar & Satellite weather data collection",
+    start: "2026-01-15",
+    end: "2026-02-01",
+  },
+    {
+    name: "Extreme rainfall assessment",
+    start: "2026-02-01",
+    end: "2026-02-15",
+  },
+  {
+    name: "Predictive model setup",
+    start: "2026-02-15",
+    end: "2026-03-15",
+  },
+  {
+    name: "Predictive model calibration",
+    start: "2026-03-10",
+    end: "2026-04-05",
+  },
+  {
+    name: "Test phase with real-time weather data",
+    start: "2026-04-01",
+    end: "2026-07-01",
+  },
+  {
+    name: "User API development",
+    start: "2026-07-01",
+    end: "2026-07-15",
+  },
+  {
+    name: "Deployment",
+    start: "2026-07-15",
+    end: "2026-09-01",
+  },
+];
+function renderGantt() {
+  const axis = document.getElementById("gantt-axis");
+  const container = document.getElementById("gantt-container");
+  if (!axis || !container) return;
+
+  // Clear previous render
+  axis.innerHTML = "";
+  container.innerHTML = "";
+
+  // Parse dates
+  const parse = (s) => new Date(s + "T00:00:00");
+  const tasks = ganttTasks.map(t => ({
+    ...t,
+    startDate: parse(t.start),
+    endDate: parse(t.end),
+  }));
+
+  const minDate = new Date(Math.min(...tasks.map(t => t.startDate.getTime())));
+  const maxDate = new Date(Math.max(...tasks.map(t => t.endDate.getTime())));
+  const total = maxDate.getTime() - minDate.getTime() || 1;
+
+  // Axis ticks (monthly)
+  const tickRow = document.createElement("div");
+  tickRow.className = "gantt-axis";
+  axis.appendChild(tickRow);
+
+  const tickCount = 6; // simple evenly spaced labels
+  for (let i = 0; i <= tickCount; i++) {
+    const d = new Date(minDate.getTime() + (i / tickCount) * total);
+    const label = d.toLocaleDateString(undefined, { month: "short", year: "2-digit" });
+
+    const tick = document.createElement("div");
+    tick.className = "gantt-tick";
+    tick.style.left = `${(i / tickCount) * 100}%`;
+    tick.textContent = label;
+    tickRow.appendChild(tick);
+  }
+
+  // Rows
+  tasks.forEach((t) => {
+    const row = document.createElement("div");
+    row.className = "gantt-row";
+
+    const label = document.createElement("div");
+    label.className = "gantt-label";
+    label.textContent = t.name;
+
+    const track = document.createElement("div");
+    track.className = "gantt-track";
+
+    const bar = document.createElement("div");
+    bar.className = "gantt-bar";
+
+    const leftPct = ((t.startDate.getTime() - minDate.getTime()) / total) * 100;
+    const widthPct = ((t.endDate.getTime() - t.startDate.getTime()) / total) * 100;
+
+    bar.style.left = `${Math.max(0, leftPct)}%`;
+    bar.style.width = `${Math.max(0.5, widthPct)}%`;
+
+    track.appendChild(bar);
+    row.appendChild(label);
+    row.appendChild(track);
+    container.appendChild(row);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupTabs();
+  setupUploadModal();
+  initUploadMapIfLeafletAvailable();
+  loadAndRenderUploadCities();
+  setupPreviewIndicatorButtons();
+  setupDownloadGraphButton();
+  renderPreviewChart("Select an indicator on the right");
+
+  renderGantt(); // ✅ add this
+});
+
+let ganttRendered = false;
+
+function ensureGanttRendered() {
+  if (ganttRendered) return;
+  renderGantt(ganttTasks);
+  ganttRendered = true;
+}
+
+// If Gantt tab is initially active on page load
+if (document.getElementById("tab-3")?.classList.contains("active")) {
+  ensureGanttRendered();
+}
