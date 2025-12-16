@@ -120,6 +120,8 @@ function setupUploadModal() {
 // Leaflet map + cities
 // -----------------------
 function initUploadMapIfLeafletAvailable() {
+  if (mapUpload) return;
+
   if (typeof window.L === "undefined") {
     console.warn("Leaflet not available - map disabled.");
     return;
@@ -127,40 +129,89 @@ function initUploadMapIfLeafletAvailable() {
   const el = document.getElementById("map-upload");
   if (!el) return;
 
-  const lightGray = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  // Base layers
+  const lightGray = L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20 }
+  );
+
+  const satellite = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    { attribution: "Tiles &copy; Esri", maxZoom: 19 }
+  );
+
+  // Create map
+  mapUpload = L.map(el, {
+    center: [20, 0],
+    zoom: 2,
+    layers: [lightGray]
   });
 
-  mapUpload = L.map(el, { center: [20, 0], zoom: 2, layers: [lightGray] });
+  // Optional: labels overlay (safe here because mapUpload exists now)
+  const labels = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png", {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  maxZoom: 20
+  });
+  labels.addTo(mapUpload); // keep labels always visible
+
+
+  // Layer switcher
+  const baseLayers = { "Light": lightGray, "Satellite": satellite };
+  const overlays = { "Labels": labels };
+  L.control.layers(baseLayers, overlays, { position: "topright" }).addTo(mapUpload);
+
+  // Markers layer
   uploadCitiesLayer = L.layerGroup().addTo(mapUpload);
 }
 
+// Load cities.json and render markers on the Upload map
 async function loadAndRenderUploadCities() {
+  // Ensure map exists
+  initUploadMapIfLeafletAvailable();
   if (!mapUpload || !uploadCitiesLayer) return;
 
-  uploadCitiesLayer.clearLayers();
+  // Clear previous markers
+  try { uploadCitiesLayer.clearLayers(); } catch (_) {}
 
+  let cities = [];
   try {
     const resp = await fetch("cities.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const cities = await resp.json();
+    const json = await resp.json();
+    cities = Array.isArray(json) ? json : (json?.cities || []);
+  } catch (e) {
+    console.warn("Could not load cities.json (are you running via a local server?)", e);
+    // Minimal fallback so you still see something
+    cities = [
+      { name: "London", lat: 51.5074, lon: -0.1278 },
+      { name: "Paris", lat: 48.8566, lon: 2.3522 },
+    ];
+  }
 
-    const bounds = [];
-    (cities || []).forEach((c) => {
-      const lat = Number(c.lat ?? c.latitude);
-      const lon = Number(c.lon ?? c.lng ?? c.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  const bounds = [];
+  cities.forEach((c) => {
+    const lat = Number(c.lat ?? c.latitude);
+    const lon = Number(c.lon ?? c.lng ?? c.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-      const m = L.marker([lat, lon]).addTo(uploadCitiesLayer);
-      if (c.name) m.bindPopup(c.name);
-      bounds.push([lat, lon]);
-    });
+    const title = c.name || c.id || "Location";
+    const m = L.circleMarker([lat, lon], {
+      radius: 6,
+      weight: 2,
+      color: "#0a66c2",
+      fillColor: "#0a66c2",
+      fillOpacity: 0.6,
+    }).bindPopup(title);
 
-    if (bounds.length) mapUpload.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
-  } catch (err) {
-    console.warn("Could not load cities.json. Use a local server (not file://).", err);
+    uploadCitiesLayer.addLayer(m);
+    bounds.push([lat, lon]);
+  });
+
+  if (bounds.length) {
+    mapUpload.fitBounds(bounds, { padding: [24, 24], maxZoom: 10 });
   }
 }
+
 
 // -----------------------
 // Preview: time series + heatmap toggle
@@ -476,30 +527,7 @@ function renderGantt() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  setupTabs();
-  setupUploadModal();
-  initUploadMapIfLeafletAvailable();
-  loadAndRenderUploadCities();
-  setupPreviewIndicatorButtons();
-  setupDownloadGraphButton();
-  renderPreviewChart("Select an indicator on the right");
-
-  renderGantt(); // ✅ add this
-});
-
-let ganttRendered = false;
-
-function ensureGanttRendered() {
-  if (ganttRendered) return;
-  renderGantt(ganttTasks);
-  ganttRendered = true;
-}
-
-// If Gantt tab is initially active on page load
-if (document.getElementById("tab-3")?.classList.contains("active")) {
-  ensureGanttRendered();
-}
+// (Bootstrapping is handled by the first DOMContentLoaded listener above.)
 
 let selectedLocationName = "All locations";
 
@@ -592,4 +620,4 @@ function setupDownloadPlotButton() {
   });
 }
 
-selectedIndicatorId = btn.getAttribute("data-id");
+// NOTE: do not set selectedIndicatorId here. It's set when a user clicks an indicator button.
