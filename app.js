@@ -163,8 +163,7 @@ function initUploadMapIfLeafletAvailable() {
   // Markers layer
   uploadCitiesLayer = L.layerGroup().addTo(mapUpload);
 }
-
-// Load cities.json and render markers on the Upload map
+// Load cities.json (or embedded cities) and render markers on the Upload map
 async function loadAndRenderUploadCities() {
   // Ensure map exists
   initUploadMapIfLeafletAvailable();
@@ -174,13 +173,21 @@ async function loadAndRenderUploadCities() {
   try { uploadCitiesLayer.clearLayers(); } catch (_) {}
 
   let cities = [];
+
   try {
-    const resp = await fetch("cities.json", { cache: "no-store" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const json = await resp.json();
-    cities = Array.isArray(json) ? json : (json?.cities || []);
+    // ✅ 1) Offline single-file mode: use embedded cities if available
+    const embedded = window.__EMBEDDED_CITIES__;
+    if (Array.isArray(embedded) && embedded.length) {
+      cities = embedded;
+    } else {
+      // ✅ 2) Normal multi-file mode: fetch cities.json
+      const resp = await fetch("cities.json", { cache: "no-store" });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const json = await resp.json();
+      cities = Array.isArray(json) ? json : (json?.cities || []);
+    }
   } catch (e) {
-    console.warn("Could not load cities.json (are you running via a local server?)", e);
+    console.warn("Could not load cities (embedded or cities.json).", e);
     // Minimal fallback so you still see something
     cities = [
       { name: "London", lat: 51.5074, lon: -0.1278 },
@@ -213,17 +220,19 @@ async function loadAndRenderUploadCities() {
 }
 
 
+
 // -----------------------
 // Preview: time series + heatmap toggle
 // -----------------------
 function setupPreviewIndicatorButtons() {
-  const buttons = document.querySelectorAll('#tab-ch .municipality-button[data-country="ch"]');
+  const buttons = Array.from(
+    document.querySelectorAll('#tab-ch .municipality-button[data-country="ch"]')
+  ).filter(btn => !["126","245","585"].includes(btn.getAttribute("data-id"))); // exclude scenarios
+
   if (!buttons.length) return;
 
   const canvas = document.getElementById("previewChart");
   const heatmap = document.getElementById("heatmap");
-
-  // 🔒 SAFETY GUARD — prevents app from crashing
   if (!canvas || !heatmap) return;
 
   buttons.forEach((btn) => {
@@ -237,19 +246,73 @@ function setupPreviewIndicatorButtons() {
       const isRisk = (selectedIndicatorId === "risk_scores");
 
       if (isRisk) {
-        if (canvas) canvas.style.display = "none";
-        if (heatmap) {
-          heatmap.style.display = "grid";
-          renderHeatmap();
-        }
+        canvas.style.display = "none";
+        heatmap.style.display = "grid";
+        renderHeatmap();
       } else {
-        if (heatmap) heatmap.style.display = "none";
-        if (canvas) canvas.style.display = "block";
+        heatmap.style.display = "none";
+        canvas.style.display = "block";
         renderPreviewChart(label);
       }
     });
   });
 }
+function setupPreviewScenarioButtons() {
+  const allBtn = document.querySelector('#tab-ch .municipality-button[data-country="ch"][data-id="all"]');
+  const scenarioButtons = Array.from(
+    document.querySelectorAll('#tab-ch .municipality-button[data-country="ch"]')
+  ).filter(btn => ["126","245","585"].includes(btn.getAttribute("data-id")));
+
+  if (!scenarioButtons.length) return;
+
+  // default = ALL scenarios selected
+  selectedScenarioIds = ["126","245","585"];
+  scenarioButtons.forEach(btn => btn.classList.add("selected"));
+  if (allBtn) allBtn.classList.add("selected");
+
+  // ALL button logic
+  if (allBtn) {
+    allBtn.addEventListener("click", () => {
+      selectedScenarioIds = ["126","245","585"];
+      scenarioButtons.forEach(b => b.classList.add("selected"));
+      allBtn.classList.add("selected");
+      if (selectedIndicatorId === "risk_scores") renderHeatmap();
+    });
+  }
+
+  // individual scenario toggle
+  scenarioButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      btn.classList.toggle("selected");
+
+      selectedScenarioIds = scenarioButtons
+        .filter(b => b.classList.contains("selected"))
+        .map(b => b.getAttribute("data-id"));
+
+      // keep at least one
+      if (selectedScenarioIds.length === 0) {
+        btn.classList.add("selected");
+        selectedScenarioIds = [id];
+      }
+
+      // ALL highlighted only if all 3 selected
+      if (allBtn) {
+        const allSelected = ["126","245","585"].every(x => selectedScenarioIds.includes(x));
+        allBtn.classList.toggle("selected", allSelected);
+      }
+
+      if (selectedIndicatorId === "risk_scores") renderHeatmap();
+    });
+  });
+}
+
+
+function initPreviewDefaults() {
+  const riskBtn = document.querySelector('#tab-ch .municipality-button[data-country="ch"][data-id="risk_scores"]');
+  if (riskBtn) riskBtn.click(); // uses your existing click logic to show heatmap + select button
+}
+
 
 function renderPreviewChart(label) {
   const canvas = document.getElementById("previewChart");
@@ -380,7 +443,7 @@ function riskColor(v) { switch (v) { case 1:return '#709386'; case 2:return '#C9
 function seededRand(seed){let x=seed%2147483647;if(x<=0)x+=2147483646;return()=> (x= x*16807%2147483647)/2147483647;}
 function renderHeatmap(){
   const container=document.getElementById('heatmap'); if(!container) return; container.innerHTML='';
-  const corner=document.createElement('div'); corner.className='header'; corner.style.textAlign='right'; corner.textContent='12 power facilities'; corner.style.fontWeight='600'; container.appendChild(corner);
+  const corner=document.createElement('div'); corner.className='header'; corner.style.textAlign='right'; corner.textContent='your facilities'; corner.style.fontWeight='600'; container.appendChild(corner);
   siteLabels.forEach(lbl=>{const h=document.createElement('div'); h.className='header'; h.textContent=lbl; container.appendChild(h);});
   const rand=seededRand(987654);
   riskLabels.forEach(risk=>{
@@ -399,7 +462,11 @@ document.addEventListener("DOMContentLoaded", () => {
   setupUploadModal();
   initUploadMapIfLeafletAvailable();
   loadAndRenderUploadCities();
+
   setupPreviewIndicatorButtons();
+  setupPreviewScenarioButtons();   // ✅ add this
+  initPreviewDefaults();           // ✅ add this
+
   setupDownloadGraphButton();
   renderPreviewChart("Select an indicator on the right");
   renderGantt();
@@ -530,6 +597,7 @@ function renderGantt() {
 // (Bootstrapping is handled by the first DOMContentLoaded listener above.)
 
 let selectedLocationName = "All locations";
+let selectedScenarioIds = ["126", "245", "585"]; // default = ALL selected
 
 async function setupLocationDropdown() {
   const select = document.getElementById("locationSelect");

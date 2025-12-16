@@ -14,5 +14,9 @@
   {"name": "Rio de Janeiro Airport", "lat": -22.8053, "lon": -43.2395},
   {"name": "Cape Town Airport", "lat": -33.96480, "lon": 18.60170},
   {"name": "Tokyo Haneda Airport", "lat": 35.5483, "lon": 139.7780},
-  {"name": "Toronto Airport", "lat": 43.67712, "lon":  -79.633453}
+  {"name": "Toronto Airport", "lat": 43.67712, "lon":  -79.633453},
+  {"name": "Dubai Airport", "lat": 25.25280, "lon":  55.36440},
+  {"name": "Mumbai Airport", "lat": 19.0902, "lon":  72.8628},
+  {"name": "Blaise Diagne Airport", "lat": 14.67, "lon": -17.0733330},
+   {"name": "Los Angeles Airport", "lat": 33.942791, "lon": -118.410042}
 ]
