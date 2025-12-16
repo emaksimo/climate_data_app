@@ -317,7 +317,7 @@ function renderRandomFloodDepthGrid(centerLatLng) {
 
   // 100m cells across 600m x 600m -> 7x7
   const cellSizeM = 100;
-  const halfSpanM = 300;
+  const halfSpanM = 800;
   const n = Math.floor((halfSpanM * 2) / cellSizeM) + 1;
   const startXM = -halfSpanM;
   const startYM = -halfSpanM;
