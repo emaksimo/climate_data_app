@@ -18,5 +18,8 @@
   {"name": "Dubai Airport", "lat": 25.25280, "lon":  55.36440},
   {"name": "Mumbai Airport", "lat": 19.0902, "lon":  72.8628},
   {"name": "Blaise Diagne Airport", "lat": 14.67, "lon": -17.0733330},
-   {"name": "Los Angeles Airport", "lat": 33.942791, "lon": -118.410042}
+  {"name": "Los Angeles Airport", "lat": 33.942791, "lon": -118.410042},
+  {"name": "Ulanbatar Airport", "lat": 47.64690, "lon": 106.81980},
+  {"name": "Julius Nyerere Airport", "lat": -6.8720, "lon": 39.2012},
+  {"name": "Astana Airport", "lat": 51.0271, "lon": 71.4607}
 ]

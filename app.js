@@ -7,6 +7,8 @@ let mapUpload = null;
 let uploadCitiesLayer = null;
 let selectedIndicatorId = null;
 
+let mapPreview = null;
+let floodLayer = null;
 function safeInvalidate(map) {
   try { if (map && typeof map.invalidateSize === "function") map.invalidateSize(); } catch(_) {}
 }
@@ -32,6 +34,15 @@ function setupTabs() {
 
       if (targetId === "tab-upload") {
         setTimeout(loadAndRenderUploadCities, 120);
+      }
+
+      if (targetId === "tab-ch") {
+        // if flood map is currently selected, re-render after tab becomes visible
+        setTimeout(() => {
+          if (selectedIndicatorId === "flood_depth") {
+            showFloodDepthPreview();
+          }
+        }, 140);
       }
 
       if (targetId === "tab-3") {
@@ -181,7 +192,7 @@ async function loadAndRenderUploadCities() {
       cities = embedded;
     } else {
       // ✅ 2) Normal multi-file mode: fetch cities.json
-      const resp = await fetch("cities.json", { cache: "no-store" });
+      const resp = await fetch("assets/cities.json", { cache: "no-store" });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       cities = Array.isArray(json) ? json : (json?.cities || []);
@@ -194,6 +205,9 @@ async function loadAndRenderUploadCities() {
       { name: "Paris", lat: 48.8566, lon: 2.3522 },
     ];
   }
+
+  // expose last loaded cities for other widgets (e.g., flood preview)
+  try { window.__LAST_CITIES__ = cities; } catch(_) {}
 
   const bounds = [];
   cities.forEach((c) => {
@@ -224,15 +238,146 @@ async function loadAndRenderUploadCities() {
 // -----------------------
 // Preview: time series + heatmap toggle
 // -----------------------
+/* -----------------------
+   Preview: Flood depth map (mock)
+   - 300m around selected location
+   - 100m grid, random depths 0–2m
+----------------------- */
+function getSelectedLocationLatLng() {
+  // Try to read from a location dropdown if available (expects JSON in value)
+  const sel = document.getElementById("locationSelect");
+  if (sel && sel.value) {
+    try {
+      const obj = JSON.parse(sel.value);
+      const lat = Number(obj.lat ?? obj.latitude);
+      const lon = Number(obj.lon ?? obj.lng ?? obj.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return [lat, lon];
+    } catch (_) {}
+  }
+
+  // Fallback: first embedded city
+  const embedded = window.__EMBEDDED_CITIES__;
+  if (Array.isArray(embedded) && embedded.length) {
+    const c = embedded[0];
+    const lat = Number(c.lat ?? c.latitude);
+    const lon = Number(c.lon ?? c.lng ?? c.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) return [lat, lon];
+  }
+
+  // Fallback: last loaded cities from upload map (multi-file mode)
+  const last = window.__LAST_CITIES__;
+  if (Array.isArray(last) && last.length) {
+    const c = last[0];
+    const lat = Number(c.lat ?? c.latitude);
+    const lon = Number(c.lon ?? c.lng ?? c.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) return [lat, lon];
+  }
+
+  // Final fallback
+  return [48.8566, 2.3522];
+}
+
+function ensurePreviewFloodMap() {
+  if (typeof window.L === "undefined") {
+    console.warn("Leaflet not available - flood preview map disabled.");
+    return;
+  }
+  const el = document.getElementById("previewFloodMap");
+  if (!el) return;
+
+  if (!mapPreview) {
+    const light = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 20
+    });
+    mapPreview = L.map(el, { center: [48.8566, 2.3522], zoom: 14, layers: [light] });
+    floodLayer = L.layerGroup().addTo(mapPreview);
+  }
+
+  // If the map container was hidden, Leaflet needs a resize
+  setTimeout(() => safeInvalidate(mapPreview), 60);
+}
+
+function floodColorFromMeters(m) {
+  const t = Math.max(0, Math.min(1, m / 2));
+  const a = 0.10 + 0.55 * t;
+  return `rgba(10, 102, 194, ${a})`;
+}
+
+function renderRandomFloodDepthGrid(centerLatLng) {
+  if (!mapPreview || !floodLayer) return;
+
+  floodLayer.clearLayers();
+
+  const [lat, lon] = centerLatLng;
+
+  // 300 m circle
+  const circle = L.circle([lat, lon], { radius: 300, weight: 1, opacity: 0.4, fillOpacity: 0.05 });
+  floodLayer.addLayer(circle);
+
+  // 100m cells across 600m x 600m -> 7x7
+  const cellSizeM = 100;
+  const halfSpanM = 300;
+  const n = Math.floor((halfSpanM * 2) / cellSizeM) + 1;
+  const startXM = -halfSpanM;
+  const startYM = -halfSpanM;
+
+  const metersToLat = (m) => m / 111320;
+  const metersToLon = (m, atLat) => m / (111320 * Math.cos((atLat * Math.PI) / 180));
+
+  for (let iy = 0; iy < n; iy++) {
+    for (let ix = 0; ix < n; ix++) {
+      const x0 = startXM + ix * cellSizeM;
+      const y0 = startYM + iy * cellSizeM;
+      const x1 = x0 + cellSizeM;
+      const y1 = y0 + cellSizeM;
+
+      const lat0 = lat + metersToLat(y0);
+      const lon0 = lon + metersToLon(x0, lat);
+      const lat1 = lat + metersToLat(y1);
+      const lon1 = lon + metersToLon(x1, lat);
+
+      const depthM = Math.random() * 2;
+      const depthCm = Math.round(depthM * 100);
+
+      const rect = L.rectangle([[lat0, lon0], [lat1, lon1]], {
+        weight: 1,
+        opacity: 0.15,
+        fillOpacity: 1,
+        fillColor: floodColorFromMeters(depthM),
+      });
+
+      rect.bindTooltip(`${depthCm} cm`, { sticky: true, direction: "center", opacity: 0.95 });
+      floodLayer.addLayer(rect);
+    }
+  }
+
+  mapPreview.fitBounds(circle.getBounds(), { padding: [12, 12], maxZoom: 17 });
+}
+
+function showFloodDepthPreview() {
+  const canvas = document.getElementById("previewChart");
+  const heatmap = document.getElementById("heatmap");
+  const floodMapEl = document.getElementById("previewFloodMap");
+
+  if (canvas) canvas.style.display = "none";
+  if (heatmap) heatmap.style.display = "none";
+  if (floodMapEl) floodMapEl.style.display = "block";
+
+  ensurePreviewFloodMap();
+  renderRandomFloodDepthGrid(getSelectedLocationLatLng());
+}
+
 function setupPreviewIndicatorButtons() {
   const buttons = Array.from(
     document.querySelectorAll('#tab-ch .municipality-button[data-country="ch"]')
-  ).filter(btn => !["126","245","585"].includes(btn.getAttribute("data-id"))); // exclude scenarios
+  ).filter(btn => !["126","245","585","all"].includes(btn.getAttribute("data-id"))); // exclude scenarios + ALL
 
   if (!buttons.length) return;
 
   const canvas = document.getElementById("previewChart");
   const heatmap = document.getElementById("heatmap");
+  const floodMapEl = document.getElementById("previewFloodMap");
   if (!canvas || !heatmap) return;
 
   buttons.forEach((btn) => {
@@ -243,20 +388,24 @@ function setupPreviewIndicatorButtons() {
       selectedIndicatorId = btn.getAttribute("data-id") || "indicator";
       const label = btn.textContent.trim() || selectedIndicatorId;
 
-      const isRisk = (selectedIndicatorId === "risk_scores");
+      // Always hide all visualizations first
+      heatmap.style.display = "none";
+      canvas.style.display = "none";
+      if (floodMapEl) floodMapEl.style.display = "none";
 
-      if (isRisk) {
-        canvas.style.display = "none";
+      if (selectedIndicatorId === "risk_scores") {
         heatmap.style.display = "grid";
         renderHeatmap();
+      } else if (selectedIndicatorId === "flood_depth") {
+        showFloodDepthPreview();
       } else {
-        heatmap.style.display = "none";
         canvas.style.display = "block";
         renderPreviewChart(label);
       }
     });
   });
 }
+
 function setupPreviewScenarioButtons() {
   const allBtn = document.querySelector('#tab-ch .municipality-button[data-country="ch"][data-id="all"]');
   const scenarioButtons = Array.from(
@@ -606,7 +755,7 @@ async function setupLocationDropdown() {
   let cities = null;
 
   try {
-    const resp = await fetch("cities.json", { cache: "no-store" });
+    const resp = await fetch("assets/cities.json", { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     cities = await resp.json();
   } catch (e) {

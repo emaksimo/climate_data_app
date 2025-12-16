@@ -10,4 +10,4 @@ http://localhost:8000/
 
 python make_single_file.py
 
-![climate explorer demo app](icons/screenshot.png)
+![climate explorer demo app](assets/img.png)
