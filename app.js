@@ -167,6 +167,9 @@ function setupPreviewIndicatorButtons() {
   const canvas = document.getElementById("previewChart");
   const heatmap = document.getElementById("heatmap");
 
+  // 🔒 SAFETY GUARD — prevents app from crashing
+  if (!canvas || !heatmap) return;
+
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       buttons.forEach((b) => b.classList.remove("selected"));
@@ -175,7 +178,7 @@ function setupPreviewIndicatorButtons() {
       selectedIndicatorId = btn.getAttribute("data-id") || "indicator";
       const label = btn.textContent.trim() || selectedIndicatorId;
 
-      const isRisk = selectedIndicatorId === "risk-scores" || /risk scores/i.test(label);
+      const isRisk = (selectedIndicatorId === "risk_scores");
 
       if (isRisk) {
         if (canvas) canvas.style.display = "none";

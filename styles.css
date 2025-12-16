@@ -448,24 +448,42 @@ html, body {
   justify-content: flex-end;
   gap: 10px;
 }
-/* Primary action button (Upload locations) */
+
+/* Primary action button */
 .primary-button {
-  margin-top: 0.75rem;
-  width: 100%;
-  border: 1px solid #cfcfcf;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 0.65rem 0.9rem;
-  font-size: 1.05rem;
+  align-self: flex-start;        /* ⬅️ prevents full-width stretch */
+  margin-top: 0.5rem;
+
+  background-color: #0a66c2;     /* blue action color */
+  color: #ffffff;
+
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+
   cursor: pointer;
-  transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease,
+              box-shadow 0.15s ease,
+              transform 0.05s ease;
 }
-.primary-button:hover { background: #f7f7f7; }
-.primary-button:active { transform: translateY(1px); }
+
+.primary-button:hover {
+  background-color: #004182;
+}
+
+.primary-button:active {
+  transform: translateY(1px);
+}
+
 .primary-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.25);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.35);
 }
+
 
 /* Preview chart wrapper */
 .chart-container {
@@ -502,26 +520,28 @@ html, body {
 
 /* Heatmap (Preview tab) */
 .heatmap {
-  width: 100%;
-  height: 100%;
-  min-height: 420px;
   display: grid;
-  grid-template-columns: 160px repeat(12, 1fr);
-  gap: 6px;
-  align-content: start;
-  padding: 14px;
-  background: #ffffff;
-  overflow: auto;
+  grid-template-columns: 140px repeat(12, 1fr); /* slightly narrower label column */
+  gap: 2px;
+  padding: 6px;
 }
+
+/* Column & row headers */
 .heatmap .header,
 .heatmap .row-label {
-  font-size: 12px;
-  color: #333;
-  padding: 6px 4px;
+  font-size: 12px;          /* ↓ smaller text */
+  line-height: 1.1;         /* ↓ tighter line height */
+  padding: 2px 4px;         /* ↓ less vertical padding */
   white-space: nowrap;
 }
+
+/* Heatmap cells */
 .heatmap .heat-cell {
-  border-radius: 6px;
-  min-height: 18px;
-  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 4px;       /* ↓ subtler rounding */
+  min-height: 6px;          /* ↓ THIS is the main vertical shrink */
+}
+
+.chart-container {
+  position: relative;
+  min-height: 420px;
 }
