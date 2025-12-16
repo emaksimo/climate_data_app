@@ -352,6 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDownloadGraphButton();
   renderPreviewChart("Select an indicator on the right");
   renderGantt();
+  setupLocationDropdown();
+  setupDownloadPlotButton();
 });
 
 
@@ -361,46 +363,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const ganttTasks = [
   {
-    name: "Historical weather data collection",
-    start: "2026-01-01",
-    end: "2026-01-15",
+    name: "Project technical specifications",
+    start: "2026-01-15",
+    end: "2026-01-30",
   },
   {
-    name: "Radar & Satellite weather data collection",
-    start: "2026-01-15",
-    end: "2026-02-01",
+    name: "Invoice settlement phase 1",
+    start: "2026-02-01",
+    end: "2026-02-09",
   },
     {
-    name: "Extreme rainfall assessment",
-    start: "2026-02-01",
-    end: "2026-02-15",
+    name: "Delivery settlement phase 1",
+    start: "2026-02-10",
+    end: "2026-03-01",
   },
   {
-    name: "Predictive model setup",
-    start: "2026-02-15",
+    name: "Adding feature 1: address (instead of lat/lon)",
+    start: "2026-03-01",
     end: "2026-03-15",
   },
   {
-    name: "Predictive model calibration",
-    start: "2026-03-10",
-    end: "2026-04-05",
+    name: "Adding feature 2: summary tables with user-defined thresholds",
+    start: "2026-03-16",
+    end: "2026-04-01",
   },
   {
-    name: "Test phase with real-time weather data",
+    name: "Adding feature 3: probability calculations",
     start: "2026-04-01",
+    end: "2026-05-01",
+  },
+  {
+    name: "Adding feature 4: historical data update",
+    start: "2026-05-01",
+    end: "2026-05-15",
+  },
+  {
+    name: "Adding feature 5: Backup server setup or cloud hosting",
+    start: "2026-05-15",
+    end: "2026-06-01",
+  },
+  {
+    name: "Adding feature 6: Adding flood return periods",
+    start: "2026-06-01",
     end: "2026-07-01",
   },
-  {
-    name: "User API development",
-    start: "2026-07-01",
-    end: "2026-07-15",
-  },
-  {
-    name: "Deployment",
-    start: "2026-07-15",
-    end: "2026-09-01",
-  },
 ];
+
 function renderGantt() {
   const axis = document.getElementById("gantt-axis");
   const container = document.getElementById("gantt-container");
@@ -422,23 +430,6 @@ function renderGantt() {
   const maxDate = new Date(Math.max(...tasks.map(t => t.endDate.getTime())));
   const total = maxDate.getTime() - minDate.getTime() || 1;
 
-  // Axis ticks (monthly)
-  const tickRow = document.createElement("div");
-  tickRow.className = "gantt-axis";
-  axis.appendChild(tickRow);
-
-  const tickCount = 6; // simple evenly spaced labels
-  for (let i = 0; i <= tickCount; i++) {
-    const d = new Date(minDate.getTime() + (i / tickCount) * total);
-    const label = d.toLocaleDateString(undefined, { month: "short", year: "2-digit" });
-
-    const tick = document.createElement("div");
-    tick.className = "gantt-tick";
-    tick.style.left = `${(i / tickCount) * 100}%`;
-    tick.textContent = label;
-    tickRow.appendChild(tick);
-  }
-
   // Rows
   tasks.forEach((t) => {
     const row = document.createElement("div");
@@ -457,11 +448,29 @@ function renderGantt() {
     const leftPct = ((t.startDate.getTime() - minDate.getTime()) / total) * 100;
     const widthPct = ((t.endDate.getTime() - t.startDate.getTime()) / total) * 100;
 
-    bar.style.left = `${Math.max(0, leftPct)}%`;
-    bar.style.width = `${Math.max(0.5, widthPct)}%`;
+    const left = Math.max(0, leftPct);
+    const width = Math.max(0.5, widthPct);
 
+    bar.style.left = `${left}%`;
+    bar.style.width = `${width}%`;
+
+    const date = document.createElement("div");
+    date.className = "gantt-date";
+    date.textContent = `${t.start} → ${t.end}`;
+
+    // center the date above the bar
+    const centerPct = leftPct + widthPct / 2;
+    date.style.left = `${Math.max(0, Math.min(100, centerPct))}%`;
+
+    // label that sticks near the bar
+    const name = document.createElement("div");
+    name.className = "gantt-bar-label";
+    name.textContent = t.name;
+    name.style.left = `${left}%`;
+    track.appendChild(date);
     track.appendChild(bar);
-    row.appendChild(label);
+    track.appendChild(name);
+
     row.appendChild(track);
     container.appendChild(row);
   });
@@ -491,3 +500,96 @@ function ensureGanttRendered() {
 if (document.getElementById("tab-3")?.classList.contains("active")) {
   ensureGanttRendered();
 }
+
+let selectedLocationName = "All locations";
+
+async function setupLocationDropdown() {
+  const select = document.getElementById("locationSelect");
+  if (!select) return;
+
+  let cities = null;
+
+  try {
+    const resp = await fetch("cities.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    cities = await resp.json();
+  } catch (e) {
+    // fallback (so it also works on file://)
+    cities = [
+      { name: "London", lat: 51.5074, lon: -0.1278 },
+      { name: "Paris", lat: 48.8566, lon: 2.3522 }
+    ];
+  }
+
+  select.innerHTML = "";
+  cities.forEach((c, i) => {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = c.name || `Location ${i + 1}`;
+    select.appendChild(opt);
+  });
+
+  // default selection
+  selectedLocationName = (cities[0]?.name || "Location 1");
+
+  select.addEventListener("change", () => {
+    const idx = Number(select.value);
+    const city = cities[idx];
+    selectedLocationName = city?.name || "Location";
+
+    // re-render the current view with location in title
+    if (selectedIndicatorId === "risk_scores") {
+      renderHeatmap();
+    } else {
+      renderPreviewChart(getCurrentChartLabel());
+    }
+  });
+}
+
+function getCurrentChartLabel() {
+  // use the selected indicator label if possible; otherwise generic
+  const activeBtn = document.querySelector('#tab-ch .municipality-button.selected');
+  const indicatorLabel = activeBtn ? activeBtn.textContent.trim() : "Indicator";
+  return `${indicatorLabel} — ${selectedLocationName}`;
+}
+
+function setupDownloadPlotButton() {
+  const btn = document.getElementById("btnDownloadPlot");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const heatmap = document.getElementById("heatmap");
+    const canvas = document.getElementById("previewChart");
+
+    // export effect
+    btn.classList.add("is-exporting");
+    const originalText = btn.textContent;
+    btn.textContent = "Exporting…";
+
+    setTimeout(() => {
+      try {
+        // If heatmap is visible, we keep behavior simple: require chart selection
+        if (heatmap && heatmap.style.display !== "none") {
+          alert("Download is available for the time series chart. Select a non-risk indicator to download the plot.");
+          return;
+        }
+
+        if (!canvas) return;
+
+        const safeLoc = (selectedLocationName || "location").replace(/[^\w\-]+/g, "_");
+        const safeInd = (selectedIndicatorId || "indicator").replace(/[^\w\-]+/g, "_");
+        const filename = `${safeInd}__${safeLoc}.png`;
+
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      } finally {
+        btn.classList.remove("is-exporting");
+        btn.textContent = originalText;
+      }
+    }, 150); // small delay so the “Exporting…” state is visible
+  });
+}
+
+selectedIndicatorId = btn.getAttribute("data-id");

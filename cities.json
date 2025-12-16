@@ -1,13 +1,18 @@
 [
   {"name": "London",  "lat": 51.507,  "lon": -0.127 },
   {"name": "Paris", "lat": 48.856, "lon": 2.352 },
-  {"name": "Kchabta (Bizerte) wind", "lat": 37.085, "lon": 9.866 },
-  {"name": "Tataouine PV", "lat": 32.929, "lon": 10.451 },
-  {"name": "Tozeur PV",  "lat": 33.920, "lon": 8.133 },
-  {"name": "Kairouan PV",  "lat": 35.676, "lon": 10.101 },
-  {"name": "Gabes PV",  "lat": 33.881, "lon": 10.098 },
-  {"name": "Sidi Bouzid PV", "lat": 35.040, "lon": 9.484 },
+  {"name": "Singapore Changi Airport", "lat": 1.3586, "lon": 103.9899},
+  {"name": "Kchabta Bizerte wind power plant", "lat": 37.085, "lon": 9.866 },
+  {"name": "Tataouine solar power plant", "lat": 32.929, "lon": 10.451 },
+  {"name": "Tozeur solar power plant",  "lat": 33.920, "lon": 8.133 },
+  {"name": "Kairouan solar power plant",  "lat": 35.676, "lon": 10.101 },
+  {"name": "Gabes solar power plant",  "lat": 33.881, "lon": 10.098 },
+  {"name": "Sidi Bouzid solar power plant", "lat": 35.040, "lon": 9.484 },
   {"name" : "New York", "lat": 40.712, "lon": -74.006},
   {"name": "Moruya Airport",  "lat": -35.902, "lon": 150.147 },
-  {"name": "Marqua Airport", "lat": -22.816, "lon": 137.35}
+  {"name": "Marqua Airport", "lat": -22.816, "lon": 137.35},
+  {"name": "Rio de Janeiro Airport", "lat": -22.8053, "lon": -43.2395},
+  {"name": "Cape Town Airport", "lat": -33.96480, "lon": 18.60170},
+  {"name": "Tokyo Haneda Airport", "lat": 35.5483, "lon": 139.7780},
+  {"name": "Toronto Airport", "lat": 43.67712, "lon":  -79.633453}
 ]

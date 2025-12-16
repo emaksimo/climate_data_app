@@ -119,6 +119,23 @@ html, body {
   gap: 0.75rem;
 }
 
+.upload-actions {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 32px;
+}
+
+.upload-instructions {
+  max-width: 650px;     /* 👈 improves readability */
+  margin: 0 auto;       /* center block */
+  font-size: 15px;
+  line-height: 1.6;     /* 👈 MORE space between lines */
+}
+
+.upload-instructions p {
+  margin: 0 0 10px;     /* 👈 space between lines */
+}
+
 /* Text in tabs 25% bigger vs previous */
 .panel-title {
   font-size: 1.25rem;
@@ -298,85 +315,47 @@ html, body {
   font-size: 0.9rem;
 }
 
-/* One row per task */
+/* Each task row: name on the left, bar on the right */
 .gantt-row {
+  margin: 22px 0;
+}
+
+/* Track is the positioning context */
+.gantt-track {
   position: relative;
-  margin-bottom: 1rem;
-  padding-left: 15rem; /* space for the label on the left */
+  height: 44px;           /* a bit taller to fit the label nicely */
+  background: #f2f4f7;
+  border-radius: 10px;
 }
 
-/* Task label on the left */
-.gantt-task-label {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 13rem;
-  white-space: normal;   /* ⬅ allow wrapping onto multiple lines */
-  overflow: visible;     /* ⬅ don't clip text */
-  text-overflow: clip;   /* ⬅ no "..." ellipsis */
-  line-height: 1.2;
-}
-
-/* The bar itself */
+/* Blue bar */
 .gantt-bar {
-  position: relative;
-  height: 1.2rem;
-  border-radius: 4px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 15px;
+  border-radius: 8px;
   background: #0a66c2;
-  opacity: 0.85;
 }
 
-/* Tooltip on hover */
-.gantt-bar::after {
-  content: attr(data-dates);
+/* Task name sticks near the bar */
+.gantt-bar-label {
   position: absolute;
-  left: 50%;
-  top: -1.5rem;
-  transform: translateX(-50%);
-  padding: 0.15rem 0.4rem;
-  background: #333;
-  color: #fff;
-  font-size: 0.7rem;
-  border-radius: 3px;
-  opacity: 0;
+  top: 32px;                /* bar top (14) + bar height (14) + gap (4) */
+  font-size: 14px;
+  color: #1f2a37;
+  white-space: nowrap;
   pointer-events: none;
-  white-space: nowrap;
-  transition: opacity 0.2s;
 }
 
-.gantt-bar:hover::after {
-  opacity: 1;
-}
-
-/* optional: subtle horizontal separator lines */
-.gantt-row:not(:last-child)::before {
-  content: "";
+/* Date label stays above bar */
+.gantt-date {
   position: absolute;
-  left: 8rem;
-  right: 0;
-  bottom: -0.4rem;
-  height: 1px;
-  background: #e0e0e0;
-}
-#gantt-axis {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
+  top: -10px;
+  font-size: 14px;
   color: #444;
-  margin-bottom: 0.4rem;
-  padding: 0 0.5rem;
-}
-
-.gantt-axis-label {
-  text-align: center;
-  transform: translateX(-50%);
   white-space: nowrap;
-}
-.gantt-bar-dates {
-  font-size: 0.75rem;
-  margin-bottom: 0.15rem;
-  text-align: center;
-  pointer-events: none; /* so hover still hits the bar if needed */
+  transform: translateX(-50%);
 }
 
 .modal {
@@ -522,27 +501,130 @@ html, body {
 /* Heatmap (Preview tab) */
 .heatmap {
   display: grid;
-  grid-template-columns: 100px repeat(12, 1fr); /* slightly narrower label column */
-  gap: 2px;
-  padding: 6px;
+  grid-template-columns: 120px repeat(12, 1fr);
+  column-gap: 2px;   /* keep horizontal spacing */
+  row-gap: 3px;      /* ↓ reduce vertical empty space */
+  grid-auto-rows: 12px;     /* 👈 THIS controls line spacing */
+  padding: 1px;
+  justify-content: center;   /* horizontal centering */
+  align-content: center;     /* vertical centering */
 }
 
 /* Column & row headers */
-.heatmap .header,
-.heatmap .row-label {
-  font-size: 12px;          /* ↓ smaller text */
-  line-height: 1.1;         /* ↓ tighter line height */
-  padding: 2px 4px;         /* ↓ less vertical padding */
-  white-space: nowrap;
+.heatmap .header {
+  height: 9px;
+  line-height: 8px;
+  padding: 0 2px;
+  font-size: 14px;
 }
 
-/* Heatmap cells */
 .heatmap .heat-cell {
-  border-radius: 4px;       /* ↓ subtler rounding */
-  min-height: 6px;          /* ↓ THIS is the main vertical shrink */
+  height: 6px;          /* 2× thicker than before */
+  border-radius: 3px;
+}
+
+.heatmap .row-label {
+  font-size: 14px;          /* ↓ smaller text */
+  padding: 1px 2px;         /* ↓ less vertical padding */
+  white-space: nowrap;
+  height: 4px;
+  display: flex;
+  align-items: center;
 }
 
 .chart-container {
   position: relative;
-  min-height: 420px;
+  min-height: 450px;
+}
+
+/* Visual separator inside the indicator list */
+.btn-divider {
+  height: 1px;
+  background: #e6e6e6;
+  margin: 8px 0;
+  border-radius: 1px;
+}
+
+.municipality-button.selected.btn-risk {
+  background: #0a66c2;
+  color: #fff;
+  border-color: #0a66c2;
+}
+
+.municipality-button.selected.btn-flood {
+  background: #009688;
+  color: #fff;
+  border-color: #009688;
+}
+
+.municipality-button.selected.btn-climate {
+  background: #444;
+  color: #fff;
+  border-color: #444;
+}
+
+.municipality-button.btn-risk:hover {
+  background: rgba(10, 102, 194, 0.18);
+}
+.municipality-button.btn-flood:hover {
+  background: rgba(0, 150, 136, 0.18);
+}
+.municipality-button.btn-climate:hover {
+  background: rgba(120, 120, 120, 0.12);
+}
+
+/* Simple form field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 14px;
+  color: #555;
+}
+
+.select {
+  border: 1px solid #d6d6d6;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+}
+
+/* Download button "export" effect */
+.primary-button.is-exporting {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.btn-download,
+.btn-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;            /* ⬅ centers horizontally */
+}
+
+/* Ensure text is white */
+.btn-download .btn-label,
+.btn-upload .btn-label {
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* Ensure icon is white */
+.btn-download .btn-icon,
+.btn-upload .btn-icon {
+  height: 32px;
+  width: 32px;
+  filter: brightness(0) invert(1); /* ⬅ turns SVG white */
+  display: block;
+}
+
+.primary-button.btn-upload,
+.primary-button.btn-download {
+  padding: 0.6rem 1rem;
 }

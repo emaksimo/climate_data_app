@@ -19,7 +19,7 @@
 <body>
   <div class="app">
     <div class="top-bar">
-      <div class="title">Climate data explorer</div>
+      <div class="title">Weather & Climate Risk data explorer</div>
     </div>
 
     <div class="tabs">
@@ -38,17 +38,18 @@
         <aside class="info-panel">
           <div>
             <div class="panel-title">Step 1: Preview and double-check your locations on the map</div>
-            <div class="spacer"></div>
-            <button id="btnUploadLocations" class="primary-button" type="button">
-              Upload locations
-            </button>
-            <div class="spacer"></div>
-            <div class="spacer"></div>
-            <div class="subtle">
+            <div class="upload-actions">
+              <button id="btnUploadLocations" class="primary-button btn-upload" type="button">
+                <span class="btn-label">Upload your locations</span>
+                <img src="icons/upload.svg" class="btn-icon" alt="" />
+              </button>
+            </div>
+            <div class="subtle upload-instructions">
               <p> Upload a CSV/XLS file with lat-lon geo coordinates or with postal addresses</p>
-              <p> 3 columns: id, latitude (lat, LAT), longitude (lon, LON), or</p>
+              <p> 3 columns: id, latitude (lat, LAT), longitude (lon, LON)</p>
+              <p> or</p>
               <p> 2 columns: id, address</p>
-              <p> ID is a short and unique</p>
+              <p> ID is a short and unique name for each site</p>
               <p> Each row represents one facility (property, factory)</p>
               <p> Latitude and Longitude are negative in the Western and in the Southern hemisphere</p>
               <p> Units: Degrees decimals, digital, without symbols</p>
@@ -56,7 +57,8 @@
               <p> Separator: dot</p>
               <p> Get template file here</p>
               <p> Please make sure that all your locations are inland. Offshore risk assessment is available on demand. Climate risks are different inland and offshore.
-              <p> Watch our video tutorial https://youtu.be/z34bGZr-irQ </p>
+              <p><a href="https://youtu.be/z34bGZr-irQ" target="_blank" rel="noopener noreferrer">Watch our video tutorial</a>
+              </p>
             </div>
           </div>
         <div id="uploadModal" class="modal" aria-hidden="true">
@@ -100,29 +102,61 @@
             <div class="panel-title">Select Indicators for the Preview</div>
           </div>
 
-          <div class="municipality-buttons">
-            <button class="municipality-button" data-country="ch" data-id="risk_scores">Risk scores for 11 hazards</button>
-            <button class="municipality-button" data-country="ch" data-id="flood_depth">Flood depth (90-meter)</button>
-            <button class="municipality-button" data-country="ch" data-id="tmax">Tmax</button>
-            <button class="municipality-button" data-country="ch" data-id="tmin">Tmin</button>
-            <button class="municipality-button" data-country="ch" data-id="max_ws">Max wind speed</button>
-            <button class="municipality-button" data-country="ch" data-id="tot_rain">Total rainfall</button>
-            <button class="municipality-button" data-country="ch" data-id="drought">Drought index</button>
-            <button class="municipality-button" data-country="ch" data-id="wfi">WildFire index</button>
-            <button class="municipality-button" data-country="ch" data-id="ext_rain">Extreme rainfall</button>
-            <button class="municipality-button" data-country="ch" data-id="hdd">Heating Degree Days</button>
-            <button class="municipality-button" data-country="ch" data-id="cdd">Cooling Degree Days</button>
+          <div>
+            <div class="municipality-buttons">
+              <button class="municipality-button btn-risk" data-country="ch" data-id="risk_scores">
+                Risk scores for 11 hazards
+              </button>
+            </div>
+          </div>
+          <div class="btn-divider"></div>
+          <div>
+            <div class="municipality-buttons">
+              <div class="btn-divider"></div>
+              <button class="municipality-button btn-flood" data-country="ch" data-id="flood_depth">
+                Flood depth, 100-yr return period in 90-meter resolution
+              </button>
+            </div>
+          </div>
+          <div class="btn-divider"></div>
+          <div>
+            <div class="municipality-buttons">
+              <button class="municipality-button" data-country="ch" data-id="tmax">Tmax</button>
+              <button class="municipality-button" data-country="ch" data-id="tmin">Tmin</button>
+              <button class="municipality-button" data-country="ch" data-id="tmean">Tmean</button>
+              <button class="municipality-button" data-country="ch" data-id="max_ws">Max wind speed</button>
+              <button class="municipality-button" data-country="ch" data-id="tot_rain">Total rainfall</button>
+              <button class="municipality-button" data-country="ch" data-id="drought">Drought index</button>
+              <button class="municipality-button" data-country="ch" data-id="wfi">WildFire index</button>
+              <button class="municipality-button" data-country="ch" data-id="ext_rain">Extreme rainfall</button>
+              <button class="municipality-button" data-country="ch" data-id="hdd">Heating Degree Days</button>
+              <button class="municipality-button" data-country="ch" data-id="cdd">Cooling Degree Days</button>
+            </div>
           </div>
           <div class="spacer"></div>
           <div>
             <div class="panel-title">Select scenarios</div>
           </div>
-
           <div class="municipality-buttons">
             <button class="municipality-button" data-country="ch" data-id="126">ssp1 rcp2.6 (orderly)</button>
             <button class="municipality-button" data-country="ch" data-id="245">ssp2 rcp4.5 (disorderly)</button>
             <button class="municipality-button" data-country="ch" data-id="585">ssp5 rcp8.5 (hot-house world)</button>
           </div>
+          <div class="spacer"></div>
+          <div class="field">
+            <div>
+              <div class="panel-title">Select location</div>
+            </div>
+            <select id="locationSelect" class="select">
+              <option value="">dropdown for your locations …</option>
+            </select>
+          </div>
+
+          <div class="spacer"></div>
+          <button id="btnDownloadPlot" class="primary-button btn-download" type="button">
+            <span class="btn-label">Download this plot (PNG)</span>
+            <img src="icons/download.svg" class="btn-icon" alt="" />
+          </button>
         </aside>
       </div>
     </section>
@@ -130,9 +164,6 @@
     <!-- UAE tab -->
     <section id="tab-uae" class="tab-content">
       <div class="layout">
-        <div class="map-container">
-          <div id="map-uae"></div>
-        </div>
         <aside class="info-panel">
           <div>
             <div class="panel-title">Select Indicators for the Download</div>
@@ -140,6 +171,10 @@
 
           <div class="municipality-buttons">
             <button class="municipality-button" data-country="uae" data-id="select_all">Select ALL</button>
+          </div>
+          <div class="btn-divider"></div>
+          <div class="municipality-buttons">
+            <button class="municipality-button" data-country="uae" data-id="risk_scores">Risk Scores for 11 hazards</button>
             <button class="municipality-button" data-country="uae" data-id="flood_depth">Flood depth (90-meter)</button>
             <button class="municipality-button" data-country="uae" data-id="tmax">Tmax</button>
             <button class="municipality-button" data-country="uae" data-id="tmin">Tmin</button>
@@ -161,6 +196,11 @@
             <button class="municipality-button" data-country="ch" data-id="245">ssp2 rcp4.5 (disorderly)</button>
             <button class="municipality-button" data-country="ch" data-id="585">ssp5 rcp8.5 (hot-house world)</button>
           </div>
+          <div class="spacer"></div>
+          <button id="btnDownloadPlot" class="primary-button btn-download" type="button">
+            <span class="btn-label">Download all this data in CSV (zipped folder)</span>
+            <img src="icons/download.svg" class="btn-icon" alt="" />
+          </button>
         </aside>
       </div>
     </section>
