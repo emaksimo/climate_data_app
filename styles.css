@@ -522,7 +522,7 @@ html, body {
 /* Heatmap (Preview tab) */
 .heatmap {
   display: grid;
-  grid-template-columns: 140px repeat(12, 1fr); /* slightly narrower label column */
+  grid-template-columns: 100px repeat(12, 1fr); /* slightly narrower label column */
   gap: 2px;
   padding: 6px;
 }
