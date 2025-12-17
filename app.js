@@ -633,23 +633,111 @@ function renderPreviewChart(label) {
 // Heatmap code (provided)
 // -----------------------
 const riskLabels = ['river flood', 'coastal flood', 'wildfire', 'drought','heat wave','severe storm', 'extreme rainfall','landslide','cold stress','change in precip','change in temp'];
-const siteLabels = Array.from({length: 12}, (_, i) => `site ${i+1}`);
+const periodLabels = ["Present", "2030", "2040", "2050"];
 function riskColor(v) { switch (v) { case 1:return '#01455c'; case 2:return '#025773'; case 3:return '#2f7dbd'; case 4:return '#35c7d6'; case 5:return '#40E0D0'; default:return '#808080'; } }
 function seededRand(seed){let x=seed%2147483647;if(x<=0)x+=2147483646;return()=> (x= x*16807%2147483647)/2147483647;}
-function renderHeatmap(){
-  const container=document.getElementById('heatmap'); if(!container) return; container.innerHTML='';
-  const corner=document.createElement('div'); corner.className='header'; corner.style.textAlign='right'; corner.textContent=''; corner.style.fontWeight='600'; container.appendChild(corner);
-  siteLabels.forEach(lbl=>{const h=document.createElement('div'); h.className='header'; h.textContent=lbl; container.appendChild(h);});
-  const rand=seededRand(987654);
-  riskLabels.forEach(risk=>{
-    const rl=document.createElement('div'); rl.className='row-label'; rl.textContent=risk; container.appendChild(rl);
-    for(let c=0;c<siteLabels.length;c++){
-      let v=Math.floor(rand()*5)+1;
-      if(risk.includes('flood')||risk.includes('storm')){ if(rand()>0.6) v=Math.min(5,v+1);}
-      const cell=document.createElement('div'); cell.className='heat-cell'; cell.style.background=riskColor(v); container.appendChild(cell);
+function renderHeatmap() {
+  const container = document.getElementById("heatmap");
+  if (!container) return;
+  container.innerHTML = "";
+
+  /* ---------- CONFIG ---------- */
+
+  const hazards = [
+    "river flood",
+    "coastal flood",
+    "wildfire",
+    "drought",
+    "heat wave",
+    "severe storm",
+    "extreme rainfall",
+    "landslide",
+    "cold stress",
+    "change in precip",
+    "change in temp",
+  ];
+
+  const scenarios = [
+    { id: "126", title: "Low scenario", periods: ["Present", "2030", "2040", "2050"] },
+    { id: "245", title: "Medium scenario", periods: ["2030", "2040", "2050"] },
+    { id: "585", title: "High scenario", periods: ["2030", "2040", "2050"] },
+  ];
+
+  /* deterministic random so it doesn’t change every render */
+  function seededRand(seed) {
+    let x = seed % 2147483647;
+    if (x <= 0) x += 2147483646;
+    return () => (x = (x * 16807) % 2147483647) / 2147483647;
+  }
+  const rand = seededRand(987654);
+
+  function randomRiskValue(hazard, period, scenarioId) {
+    let v = Math.floor(rand() * 5) + 1;
+    if (hazard.includes("flood") || hazard.includes("storm")) {
+      if (rand() > 0.6) v = Math.min(5, v + 1);
     }
+    return v; // 1..5 → mapped by riskColor()
+  }
+
+  /* ---------- GRID ---------- */
+
+  const totalColumns =
+    1 + scenarios.reduce((sum, s) => sum + s.periods.length, 0);
+
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = `180px repeat(${totalColumns - 1}, 1fr)`;
+  container.style.columnGap = "8px";
+  container.style.rowGap = "10px";
+
+  /* ---------- HEADER ROW 1 : scenario titles ---------- */
+
+  // empty corner
+  container.appendChild(document.createElement("div"));
+
+  scenarios.forEach((sc) => {
+    const h = document.createElement("div");
+    h.className = "header";
+    h.textContent = sc.title;
+    h.style.gridColumn = `span ${sc.periods.length}`;
+    h.style.fontWeight = "600";
+    container.appendChild(h);
+  });
+
+  /* ---------- HEADER ROW 2 : periods under each scenario ---------- */
+
+  // empty under hazard labels
+  container.appendChild(document.createElement("div"));
+
+  scenarios.forEach((sc) => {
+    sc.periods.forEach((p) => {
+      const h = document.createElement("div");
+      h.className = "header";
+      h.textContent = p;
+      container.appendChild(h);
+    });
+  });
+
+  /* ---------- DATA ROWS ---------- */
+
+  hazards.forEach((hazard) => {
+    // hazard label
+    const rl = document.createElement("div");
+    rl.className = "row-label";
+    rl.textContent = hazard;
+    container.appendChild(rl);
+
+    scenarios.forEach((sc) => {
+      sc.periods.forEach((p) => {
+        const v = randomRiskValue(hazard, p, sc.id);
+        const cell = document.createElement("div");
+        cell.className = "heat-cell";
+        cell.style.background = riskColor(v);
+        container.appendChild(cell); // NO LETTERS
+      });
+    });
   });
 }
+
 // Boot
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
