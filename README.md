@@ -1,12 +1,15 @@
-# climate data explorer DEMO tool 
+### Physical Climate Risk : data explorer DEMO tool 
+
+This visualization tool works with WTN data
 
 To run this project:
 
-python -m http.server 8800
+python -m http.server 8000
 
 Then open in your browser:
 http://localhost:8000/ 
 
+### To create a standalone HTML to run in any browser (no coding skills)
 python make_single_file.py
 
 ![climate explorer demo app](assets/img.png)

@@ -462,126 +462,172 @@ function initPreviewDefaults() {
   if (riskBtn) riskBtn.click(); // uses your existing click logic to show heatmap + select button
 }
 
-
 function renderPreviewChart(label) {
   const canvas = document.getElementById("previewChart");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
 
-  // crisp on HiDPI
-  const rect = canvas.getBoundingClientRect();
-  const W = Math.max(600, rect.width || 900);
-  const H = Math.max(420, rect.height || 500);
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(W * dpr);
-  canvas.height = Math.floor(H * dpr);
-  canvas.style.width = W + "px";
-  canvas.style.height = H + "px";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Fit to container
+  const parent = canvas.parentElement;
+  const w = Math.max(640, parent?.clientWidth || 900);
+  const h = Math.max(360, parent?.clientHeight || 520);
+  canvas.width = w;
+  canvas.height = h;
 
-  // fake data
-  const start = 2000, end = 2050;
-  const n = end - start + 1;
-  const values = [];
-  let base = 50 + Math.random() * 20;
-  let trend = (Math.random() - 0.3) * 0.25;
-  for (let i = 0; i < n; i++) {
-    base += trend;
-    const seasonal = 4 * Math.sin(i / 3.5);
-    const noise = (Math.random() - 0.5) * 3.0;
-    values.push(base + seasonal + noise);
+  // ---- CONFIG ----
+  const HIST_START = 1991, HIST_END = 2025;
+  const FUT_START = 2026, FUT_END = 2050;
+
+  const COLORS = {
+    historical: "#000000",
+    "126": "#1f77b4", // ssp1
+    "245": "#ff7f0e", // ssp2
+    "585": "#d62728", // ssp5
+  };
+
+  const scenarioName = {
+    "126": "rcp2.6",
+    "245": "rcp4.5",
+    "585": "rcp8.5",
+  };
+
+  // selectedScenarioIds should already exist in your app
+  const selected = (Array.isArray(selectedScenarioIds) && selectedScenarioIds.length)
+    ? selectedScenarioIds
+    : ["126", "245", "585"];
+
+  // ---- Generate demo data (replace with real data when ready) ----
+  function seriesYears(a, b) {
+    const out = [];
+    for (let y = a; y <= b; y++) out.push(y);
+    return out;
   }
 
-  // layout
-  const padL = 52, padR = 16, padT = 44, padB = 38;
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = "#222";
-  ctx.font = "600 16px Comfortaa, system-ui, sans-serif";
-  ctx.fillText(label, padL, 26);
-
-  const x0 = padL, y0 = H - padB, x1 = W - padR, y1 = padT;
-  const vMin = Math.min(...values), vMax = Math.max(...values);
-  const vPad = (vMax - vMin) * 0.08 || 1;
-  const minV = vMin - vPad, maxV = vMax + vPad;
-
-  const x = (i) => x0 + (i / (n - 1)) * (x1 - x0);
-  const y = (v) => y0 - ((v - minV) / (maxV - minV)) * (y0 - y1);
-
-  // grid + y ticks
-  ctx.strokeStyle = "#eee";
-  ctx.lineWidth = 1;
-  ctx.font = "12px Comfortaa, system-ui, sans-serif";
-  ctx.fillStyle = "#666";
-
-  const yTicks = 5;
-  for (let t = 0; t <= yTicks; t++) {
-    const vv = minV + (t / yTicks) * (maxV - minV);
-    const yy = y(vv);
-    ctx.beginPath();
-    ctx.moveTo(x0, yy);
-    ctx.lineTo(x1, yy);
-    ctx.stroke();
-    ctx.fillText(vv.toFixed(1), 8, yy + 4);
+  // base signal (just a smooth-ish curve)
+  function baseValue(year) {
+    const t = (year - HIST_START) / (FUT_END - HIST_START);
+    return 0.4 + 0.15 * Math.sin(t * Math.PI * 2) + 0.08 * Math.cos(t * Math.PI * 4);
   }
 
-  // x ticks every 10y
-  ctx.strokeStyle = "#e9e9e9";
-  for (let yr = start; yr <= end; yr += 10) {
-    const i = yr - start;
-    const xx = x(i);
-    ctx.beginPath();
-    ctx.moveTo(xx, y0);
-    ctx.lineTo(xx, y1);
-    ctx.stroke();
-    ctx.fillText(String(yr), xx - 14, H - 14);
+  function noise(seed) {
+    // deterministic-ish noise per year/seed
+    const x = Math.sin(seed * 999 + 0.17) * 10000;
+    return x - Math.floor(x);
   }
 
-  // axes
-  ctx.strokeStyle = "#bbb";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(x0, y1);
-  ctx.lineTo(x0, y0);
-  ctx.lineTo(x1, y0);
-  ctx.stroke();
+  const histYears = seriesYears(HIST_START, HIST_END);
+  const hist = histYears.map((y, i) => ({ x: y, y: baseValue(y) + (noise(y) - 0.5) * 0.04 }));
 
-  // line
-  ctx.strokeStyle = "#0a66c2";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < n; i++) {
-    const xx = x(i);
-    const yy = y(values[i]);
-    if (i === 0) ctx.moveTo(xx, yy);
-    else ctx.lineTo(xx, yy);
-  }
-  ctx.stroke();
-}
-
-function setupDownloadGraphButton() {
-  const btn = document.getElementById("btnDownloadGraph");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    const heatmap = document.getElementById("heatmap");
-    const canvas = document.getElementById("previewChart");
-
-    if (heatmap && heatmap.style.display !== "none") {
-      alert("Download is available for the time series chart. Select a non-risk indicator to download the graph.");
-      return;
-    }
-    if (!canvas) return;
-
-    const link = document.createElement("a");
-    link.download = (selectedIndicatorId || "preview") + "_timeseries.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+  const futYears = seriesYears(FUT_START, FUT_END);
+  const scen = {};
+  ["126", "245", "585"].forEach((id) => {
+    // scenario offsets / trends
+    const drift = (id === "126") ? 0.05 : (id === "245") ? 0.10 : 0.18;
+    scen[id] = futYears.map((y) => {
+      const dt = (y - FUT_START) / (FUT_END - FUT_START);
+      return { x: y, y: baseValue(y) + drift * dt + (noise(y + Number(id)) - 0.5) * 0.04 };
+    });
   });
+
+  // ---- Determine y-range from visible data ----
+  const allPoints = [
+    ...hist,
+    ...selected.flatMap(id => scen[id] || [])
+  ];
+  let ymin = Math.min(...allPoints.map(p => p.y));
+  let ymax = Math.max(...allPoints.map(p => p.y));
+  const pad = (ymax - ymin) * 0.15 || 0.1;
+  ymin -= pad; ymax += pad;
+
+  // ---- Layout ----
+  const margin = { l: 60, r: 20, t: 40, b: 45 };
+  const plotW = w - margin.l - margin.r;
+  const plotH = h - margin.t - margin.b;
+
+  const xMin = HIST_START, xMax = FUT_END;
+
+  const X = (year) => margin.l + ((year - xMin) / (xMax - xMin)) * plotW;
+  const Y = (val) => margin.t + (1 - (val - ymin) / (ymax - ymin)) * plotH;
+
+  // ---- Clear ----
+  ctx.clearRect(0, 0, w, h);
+
+  // Title
+  ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.fillStyle = "#111";
+  ctx.fillText(label, margin.l, 24);
+
+  // Axes
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(margin.l, margin.t);
+  ctx.lineTo(margin.l, margin.t + plotH);
+  ctx.lineTo(margin.l + plotW, margin.t + plotH);
+  ctx.stroke();
+
+  // X ticks (years)
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  const xticks = [1991, 2000, 2010, 2020, 2025, 2030, 2040, 2050];
+  xticks.forEach((yr) => {
+    const x = X(yr);
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.beginPath();
+    ctx.moveTo(x, margin.t);
+    ctx.lineTo(x, margin.t + plotH);
+    ctx.stroke();
+
+    ctx.fillText(String(yr), x - 12, margin.t + plotH + 28);
+  });
+
+  // separator at 2025/2026
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(X(2025.5), margin.t);
+  ctx.lineTo(X(2025.5), margin.t + plotH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ---- Draw line helper ----
+  function drawLine(points, color, width) {
+    if (!points || points.length < 2) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(X(points[0].x), Y(points[0].y));
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(X(points[i].x), Y(points[i].y));
+    }
+    ctx.stroke();
+  }
+
+  // Historical (1991–2025) in black
+  drawLine(hist, COLORS.historical, 2.5);
+
+  // Future (2026–2050) scenarios
+  selected.forEach((id) => {
+    drawLine(scen[id], COLORS[id] || "#666", 2.2);
+  });
+
+  // ---- Inline labels near last point ----
+  function labelAtEnd(points, text, color) {
+    if (!points || !points.length) return;
+    const p = points[points.length - 1];
+    const x = X(p.x) + 8;
+    const y = Y(p.y) + 4;
+    ctx.fillStyle = color;
+    ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText(text, Math.min(x, w - 140), Math.max(y, margin.t + 12));
+  }
+
+  labelAtEnd(hist, "Historical", COLORS.historical);
+  selected.forEach((id) => labelAtEnd(scen[id], scenarioName[id] || id, COLORS[id] || "#666"));
 }
+
 
 // -----------------------
 // Heatmap code (provided)
