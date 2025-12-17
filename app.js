@@ -506,26 +506,26 @@ function renderPreviewChart(label) {
   // base signal (just a smooth-ish curve)
   function baseValue(year) {
     const t = (year - HIST_START) / (FUT_END - HIST_START);
-    return 0.4 + 0.15 * Math.sin(t * Math.PI * 2) + 0.08 * Math.cos(t * Math.PI * 4);
+    return 0.01 + 0.025 * Math.sin(t * Math.PI * 62) + 0.008 * Math.cos(t * Math.PI * 0.02);
   }
 
   function noise(seed) {
     // deterministic-ish noise per year/seed
-    const x = Math.sin(seed * 999 + 0.17) * 10000;
+    const x = Math.sin(seed * 0.09 + 0.007) * 10;
     return x - Math.floor(x);
   }
 
   const histYears = seriesYears(HIST_START, HIST_END);
-  const hist = histYears.map((y, i) => ({ x: y, y: baseValue(y) + (noise(y) - 0.5) * 0.04 }));
+  const hist = histYears.map((y, i) => ({ x: y, y: baseValue(y) + (noise(y) - 0.05) * 0.14 }));
 
   const futYears = seriesYears(FUT_START, FUT_END);
   const scen = {};
   ["126", "245", "585"].forEach((id) => {
     // scenario offsets / trends
-    const drift = (id === "126") ? 0.05 : (id === "245") ? 0.10 : 0.18;
+    const drift = (id === "126") ? 0.05 : (id === "245") ? 0.010 : 0.018;
     scen[id] = futYears.map((y) => {
       const dt = (y - FUT_START) / (FUT_END - FUT_START);
-      return { x: y, y: baseValue(y) + drift * dt + (noise(y + Number(id)) - 0.5) * 0.04 };
+      return { x: y, y: baseValue(y) + drift * dt + (noise(y + Number(id)) - 0.05) * 0.14 };
     });
   });
 
