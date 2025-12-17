@@ -650,7 +650,6 @@ function renderHeatmap(){
     }
   });
 }
-
 // Boot
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
