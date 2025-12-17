@@ -638,7 +638,7 @@ function riskColor(v) { switch (v) { case 1:return '#01455c'; case 2:return '#02
 function seededRand(seed){let x=seed%2147483647;if(x<=0)x+=2147483646;return()=> (x= x*16807%2147483647)/2147483647;}
 function renderHeatmap(){
   const container=document.getElementById('heatmap'); if(!container) return; container.innerHTML='';
-  const corner=document.createElement('div'); corner.className='header'; corner.style.textAlign='right'; corner.textContent='your facilities'; corner.style.fontWeight='600'; container.appendChild(corner);
+  const corner=document.createElement('div'); corner.className='header'; corner.style.textAlign='right'; corner.textContent=''; corner.style.fontWeight='600'; container.appendChild(corner);
   siteLabels.forEach(lbl=>{const h=document.createElement('div'); h.className='header'; h.textContent=lbl; container.appendChild(h);});
   const rand=seededRand(987654);
   riskLabels.forEach(risk=>{
