@@ -588,7 +588,7 @@ function setupDownloadGraphButton() {
 // -----------------------
 const riskLabels = ['river flood', 'coastal flood', 'wildfire', 'drought','heat wave','severe storm', 'extreme rainfall','landslide','cold stress','change in precip','change in temp'];
 const siteLabels = Array.from({length: 12}, (_, i) => `site ${i+1}`);
-function riskColor(v) { switch (v) { case 1:return '#709386'; case 2:return '#C9C17B'; case 3:return '#CE9D61'; case 4:return '#E2432D'; case 5:return '#B50F0B'; default:return '#808080'; } }
+function riskColor(v) { switch (v) { case 1:return '#01455c'; case 2:return '#025773'; case 3:return '#2f7dbd'; case 4:return '#35c7d6'; case 5:return '#40E0D0'; default:return '#808080'; } }
 function seededRand(seed){let x=seed%2147483647;if(x<=0)x+=2147483646;return()=> (x= x*16807%2147483647)/2147483647;}
 function renderHeatmap(){
   const container=document.getElementById('heatmap'); if(!container) return; container.innerHTML='';
